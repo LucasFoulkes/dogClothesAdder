@@ -1,9 +1,16 @@
 import { useState } from "react";
+import Form from "./Form";
 
 function Upload() {
   const [image, setImage] = useState(null);
   const [currentImageURL, setCurrentImageURL] = useState(null);
   const [step, setStep] = useState(0);
+
+  const handleChange = async (e) => {
+    setImage(e.target.files[0]);
+    setCurrentImageURL(URL.createObjectURL(e.target.files[0]));
+    setStep(1);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -86,12 +93,6 @@ function Upload() {
     }
   };
 
-  const handleChange = (e) => {
-    setImage(e.target.files[0]);
-    setCurrentImageURL(URL.createObjectURL(e.target.files[0]));
-    setStep(1);
-  };
-
   const handleReset = () => {
     setImage(null);
     setCurrentImageURL(null);
@@ -99,23 +100,15 @@ function Upload() {
   };
 
   return (
-    <form>
-      {step === 0 && <input type="file" onChange={handleChange} />}
-      {step === 1 && <button onClick={handleSubmit}>Upload</button>}
-      {step === 2 && <button onClick={handleProcess}>Process</button>}
-      {step === 3 && <button onClick={handleEdit}>Edit</button>}
-      {step === 4 && <button onClick={handleReset}>Reset</button>}
-      <div>
-        {currentImageURL && (
-          <img
-            id="current-image"
-            src={currentImageURL}
-            alt="Current Image"
-            height={500}
-          />
-        )}
-      </div>
-    </form>
+    <Form
+      step={step}
+      handleChange={handleChange}
+      handleSubmit={handleSubmit}
+      handleProcess={handleProcess}
+      handleEdit={handleEdit}
+      handleReset={handleReset}
+      currentImageURL={currentImageURL}
+    />
   );
 }
 
