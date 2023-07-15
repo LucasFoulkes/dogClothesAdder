@@ -76,27 +76,9 @@ const MaskedImage = ({ editedMask, originalImage }) => {
 
   return (
     <div>
-      {originalImageUrl && (
-        <img
-          src={originalImageUrl}
-          alt="Original"
-          style={{ width: "100px", height: "100px", objectFit: "contain" }}
-        />
-      )}
-      {editedImageUrl && (
-        <img
-          src={editedImageUrl}
-          alt="Edited"
-          style={{ width: "100px", height: "100px", objectFit: "contain" }}
-        />
-      )}
-      {processedImage && (
-        <img
-          src={processedImage}
-          alt="Processed"
-          style={{ width: "100px", height: "100px", objectFit: "contain" }}
-        />
-      )}
+      {originalImageUrl && <img src={originalImageUrl} alt="Original" />}
+      {editedImageUrl && <img src={editedImageUrl} alt="Edited" />}
+      {processedImage && <img src={processedImage} alt="Processed" />}
       <button onClick={processImage} className="bg-zinc-900">
         Process
       </button>

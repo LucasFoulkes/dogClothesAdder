@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+// Mask.jsx
 import { useState } from "react";
 
 const Mask = ({ originalImage, setMaskImage }) => {
@@ -15,9 +16,8 @@ const Mask = ({ originalImage, setMaskImage }) => {
 
     if (response.ok) {
       const blob = await response.blob();
-      const maskImageUrl = URL.createObjectURL(blob);
-      setMaskImage(maskImageUrl); // Update the mask image state in the parent component
-      setLocalMaskImage(maskImageUrl); // Update the local mask image state
+      setMaskImage(blob); // Update the mask image state in the parent component
+      setLocalMaskImage(blob); // Update the local mask image state
     } else {
       console.error("Failed to generate mask");
     }

@@ -6,6 +6,8 @@ const ImageWithMask = ({ originalImage, maskImage, setEditedMask }) => {
   const mousePressed = useRef(false);
   const circleRadius = useRef(50);
   const [radius, setRadius] = useState(50);
+  const [showCanvas, setShowCanvas] = useState(true);
+  const [editedImage, setEditedImage] = useState(null);
   let animationFrameId;
 
   const editPixels = (data) => {
@@ -54,6 +56,8 @@ const ImageWithMask = ({ originalImage, maskImage, setEditedMask }) => {
     const canvas = canvasRef.current;
     const dataUrl = canvas.toDataURL();
     setEditedMask(dataUrl);
+    setEditedImage(dataUrl);
+    setShowCanvas(false);
   };
 
   useEffect(() => {
@@ -135,34 +139,43 @@ const ImageWithMask = ({ originalImage, maskImage, setEditedMask }) => {
         alt="Original"
         className="h-full"
       />
-      <canvas
-        ref={canvasRef}
-        className="absolute top-0 left-0 h-full opacity-30"
-      />
-      <input
-        type="range"
-        min="10"
-        max="200"
-        value={radius}
-        onChange={(e) => {
-          setRadius(e.target.value);
-          circleRadius.current = e.target.value;
-        }}
-        className="absolute top-0 right-0"
-      />
-      <button
-        onClick={resetCanvas}
-        className="absolute top-0 right-0 m-4 bg-zinc-900"
-      >
-        Reset
-      </button>
-      <br />
-      <button
-        onClick={handleSave}
-        className="absolute top-20 right-0 m-4 bg-zinc-900"
-      >
-        Save
-      </button>
+      {showCanvas ? (
+        <>
+          <canvas
+            ref={canvasRef}
+            className="absolute top-0 left-0 h-full opacity-30"
+          />
+          <input
+            type="range"
+            min="10"
+            max="200"
+            value={radius}
+            onChange={(e) => {
+              setRadius(e.target.value);
+              circleRadius.current = e.target.value;
+            }}
+            className="absolute top-0 right-0"
+          />
+          <button
+            onClick={resetCanvas}
+            className="absolute top-0 right-0 m-4 bg-zinc-900"
+          >
+            Reset
+          </button>
+          <button
+            onClick={handleSave}
+            className="absolute top-20 right-0 m-4 bg-zinc-900"
+          >
+            Save
+          </button>
+        </>
+      ) : (
+        <img
+          src={editedImage}
+          alt="Edited"
+          className="absolute top-0 left-0 h-full"
+        />
+      )}
     </div>
   );
 };
