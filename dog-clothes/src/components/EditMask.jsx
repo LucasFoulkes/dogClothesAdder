@@ -1,14 +1,15 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from "react";
+import Controller from "./Controller"; // Import the Controller component
 
 export default function EditMask({ mask, originalImage, setEditedMask }) {
   const imgRef = useRef(null);
   const canvasRef = useRef(null);
   const mousePos = useRef({ x: 0, y: 0 });
-  const [isMouseDown, setIsMouseDown] = useState(false); // State to track whether the mouse button is pressed
-  const [brushSize, setBrushSize] = useState(25); // State to control the size of the brush
-  const [brushColor, setBrushColor] = useState("black"); // State to control the color of the brush
-  const [isEditable, setIsEditable] = useState(true); // State to control whether the canvas is editable
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [brushSize, setBrushSize] = useState(25);
+  const [brushColor, setBrushColor] = useState("black");
+  const [isEditable, setIsEditable] = useState(true);
 
   const resetCanvas = () => {
     const canvas = canvasRef.current;
@@ -49,21 +50,41 @@ export default function EditMask({ mask, originalImage, setEditedMask }) {
         ctx.arc(
           mousePos.current.x,
           mousePos.current.y,
-          brushSize, // Use the current brush size from the state
+          brushSize,
           0,
           2 * Math.PI,
           false
         );
-        ctx.fillStyle = brushColor; // Use the current brush color from the state
+        ctx.fillStyle = brushColor;
         ctx.fill();
       }
     };
 
     const handleMouseDown = () => setIsMouseDown(true);
     const handleMouseUp = () => setIsMouseDown(false);
+
+    const handleTouchMove = (event) => {
+      event.preventDefault();
+      const touch = event.touches[0];
+      handleMouseMove(touch);
+    };
+
+    const handleTouchStart = (event) => {
+      event.preventDefault();
+      handleMouseDown();
+    };
+
+    const handleTouchEnd = (event) => {
+      event.preventDefault();
+      handleMouseUp();
+    };
+
     canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("mousedown", handleMouseDown);
     canvas.addEventListener("mouseup", handleMouseUp);
+    canvas.addEventListener("touchmove", handleTouchMove);
+    canvas.addEventListener("touchstart", handleTouchStart);
+    canvas.addEventListener("touchend", handleTouchEnd);
 
     img.onload = () => {
       canvas.width = img.naturalWidth;
@@ -75,19 +96,25 @@ export default function EditMask({ mask, originalImage, setEditedMask }) {
       canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mousedown", handleMouseDown);
       canvas.removeEventListener("mouseup", handleMouseUp);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchstart", handleTouchStart);
+      canvas.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [mask, isMouseDown, brushSize, brushColor, isEditable]); // React hook dependency array
+  }, [mask, isMouseDown, brushSize, brushColor, isEditable]);
 
   if (mask) {
     return (
       <div
         style={{
-          position: "relative",
+          position: "fixed",
+          top: 0,
+          left: 0,
           width: "100%",
-          height: "100%",
+          height: "100vh",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          overflow: "hidden",
         }}
       >
         <img
@@ -103,43 +130,17 @@ export default function EditMask({ mask, originalImage, setEditedMask }) {
             width: window.innerWidth < 768 ? "100%" : "auto",
             height: window.innerWidth < 768 ? "auto" : "100%",
             objectFit: "contain",
-            opacity: 0.5, // Semi-transparent canvas
+            opacity: 0.5,
           }}
         />
-        <button
-          onClick={resetCanvas}
-          style={{ position: "absolute", top: 10, right: 10 }}
-          className="bg-zinc-900"
-        >
-          Reset Canvas
-        </button>
-        <button
-          onClick={saveCanvas}
-          style={{ position: "absolute", top: 130, right: 10 }}
-          className="bg-zinc-900"
-        >
-          Save Canvas
-        </button>
-        <input
-          type="range"
-          min="1"
-          max="100"
-          value={brushSize}
-          onChange={(e) => setBrushSize(e.target.value)}
-          style={{ position: "absolute", top: 50, right: 10 }}
+        <Controller
+          resetCanvas={resetCanvas}
+          saveCanvas={saveCanvas}
+          brushSize={brushSize}
+          setBrushSize={setBrushSize}
+          toggleBrushColor={toggleBrushColor}
+          brushColor={brushColor}
         />
-        <button
-          onClick={toggleBrushColor}
-          style={{
-            position: "absolute",
-            top: 90,
-            right: 10,
-            backgroundColor: brushColor,
-            color: brushColor === "black" ? "white" : "black",
-          }}
-        >
-          {brushColor === "black" ? "Black Brush" : "White Brush"}
-        </button>
       </div>
     );
   }
