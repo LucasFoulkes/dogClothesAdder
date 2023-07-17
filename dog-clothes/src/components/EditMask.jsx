@@ -1,8 +1,15 @@
+/* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from "react";
 import { Stage, Layer, Image, Circle } from "react-konva";
+import Konva from "konva";
 import styles from "./EditMask.module.scss";
 
-export default function EditMask({ dogMask, setDogMask, originalImage }) {
+export default function EditMask({
+  dogMask,
+  setDogMask,
+  originalImage,
+  setEdited,
+}) {
   const imageRef = useRef(null);
   const stageRef = useRef(null);
   const bottomRef = useRef(null);
@@ -18,7 +25,6 @@ export default function EditMask({ dogMask, setDogMask, originalImage }) {
       setDimensions({ width: image.width, height: image.height });
     }
 
-    // Load the dog mask image
     const img = new window.Image();
     img.src = dogMask;
     img.onload = () => {
@@ -45,6 +51,7 @@ export default function EditMask({ dogMask, setDogMask, originalImage }) {
     if (stage) {
       const url = stage.toDataURL();
       setDogMask(url);
+      setEdited(true);
     }
   };
 
@@ -84,6 +91,7 @@ export default function EditMask({ dogMask, setDogMask, originalImage }) {
                 image={maskImage}
                 width={dimensions.width}
                 height={dimensions.height}
+                filters={[Konva.Filters.RGBA]}
               />
             )}
             {circlePos.map((pos, i) => (

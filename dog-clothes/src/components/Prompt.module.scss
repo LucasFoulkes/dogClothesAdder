@@ -1,0 +1,43 @@
+@import "../colors.scss";
+
+.imageContainer {
+    display: grid;
+  }
+  
+  .overlay {
+    grid-area: 1 / 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column; 
+  }
+  
+  .img {
+    grid-area: 1 / 1;
+  }
+
+
+  form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: $tertiary-color; /* Black */
+    color : $quaternary-color; /* White */
+    padding: 1em;
+    margin: 1em;
+  }
+  
+  form input[type="text"] {
+    height: 50px; /* Adjust as needed */
+    font-size: 20px; /* Adjust as needed */
+    color: $quaternary-color; /* White */
+    background-color: $tertiary-color; /* Black */
+    padding: 1em;
+  }
+  
+  form button {
+    margin-top: 10px; /* Adds space between the button and the text area */
+    width: 100px; /* Adjust as needed */
+  }
+  
