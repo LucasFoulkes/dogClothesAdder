@@ -1,54 +1,72 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
-import { BounceLoader } from "react-spinners";
+import { useRef, useState, useEffect } from "react";
+import pica from "pica";
 
-const Original = ({ setOriginalImage }) => {
+export default function Original({ setOriginalImage }) {
+  const fileInput = useRef();
+  const [image, setImage] = useState(null);
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [loading, setLoading] = useState(false);
-  const [fileSelected, setFileSelected] = useState(false);
 
   const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setFileSelected(true);
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadstart = () => {
-        setLoading(true);
+    if (event.target.files && event.target.files[0]) {
+      const img = event.target.files[0];
+      const url = URL.createObjectURL(img);
+      setImage(url);
+      setLoading(true); // Set loading to true immediately after a file is selected
+
+      const imgElem = new Image();
+      imgElem.onload = function () {
+        setImageSize({
+          width: this.width,
+          height: this.height,
+        });
       };
-      reader.onloadend = () => {
-        setLoading(false);
-        setOriginalImage(reader.result);
-      };
+      imgElem.src = url;
+    } else {
+      setLoading(false); // If no file is selected (dialog is cancelled), set loading back to false
     }
   };
 
-  if (!fileSelected) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageUpload}
-          className="hidden"
-          id="upload-button"
-        />
-        <label
-          htmlFor="upload-button"
-          className="bg-zinc-900 px-4 py-2 rounded-md border-white border-2 capitalize cursor-pointer"
-        >
-          Upload Image
-        </label>
-        {loading && (
-          <div className="flex flex-col items-center justify-center">
-            <BounceLoader color="#123abc" size={50} />
-          </div>
-        )}
-      </div>
-    );
-  }
+  const handleClick = () => {
+    fileInput.current.click();
+  };
 
-  // If file is selected, you can return something else here, or nothing at all
-  return null;
-};
+  useEffect(() => {
+    if (image && imageSize.width && imageSize.height) {
+      const screenWidth = window.innerWidth;
+      const aspectRatio = imageSize.width / imageSize.height;
+      const screenHeight = screenWidth / aspectRatio;
 
-export default Original;
+      const canvas = document.createElement("canvas");
+      canvas.width = screenWidth;
+      canvas.height = screenHeight;
+
+      const imgElem = new Image();
+      imgElem.onload = function () {
+        pica()
+          .resize(this, canvas)
+          .then((result) => pica().toBlob(result, "image/jpeg", 0.9))
+          .then((blob) => {
+            setOriginalImage(URL.createObjectURL(blob));
+            setLoading(false);
+          });
+      };
+      imgElem.src = image;
+    }
+  }, [image, imageSize, setOriginalImage]);
+
+  return (
+    <>
+      {!loading && <button onClick={handleClick}>Upload Image</button>}
+      {loading && <p>Uploading...</p>}
+      <input
+        ref={fileInput}
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        style={{ display: "none" }}
+      />
+    </>
+  );
+}

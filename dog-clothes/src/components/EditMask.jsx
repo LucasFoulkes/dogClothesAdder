@@ -1,149 +1,104 @@
-/* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from "react";
-import Controller from "./Controller"; // Import the Controller component
+import { Stage, Layer, Image, Circle } from "react-konva";
+import styles from "./EditMask.module.scss";
 
-export default function EditMask({ mask, originalImage, setEditedMask }) {
-  const imgRef = useRef(null);
-  const canvasRef = useRef(null);
-  const mousePos = useRef({ x: 0, y: 0 });
-  const [isMouseDown, setIsMouseDown] = useState(false);
-  const [brushSize, setBrushSize] = useState(25);
+export default function EditMask({ dogMask, setDogMask, originalImage }) {
+  const imageRef = useRef(null);
+  const stageRef = useRef(null);
+  const bottomRef = useRef(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [maskImage, setMaskImage] = useState(null);
+  const [circlePos, setCirclePos] = useState([]);
   const [brushColor, setBrushColor] = useState("black");
-  const [isEditable, setIsEditable] = useState(true);
+  const radius = 20;
 
-  const resetCanvas = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    const img = imgRef.current;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, img.width, img.height);
+  useEffect(() => {
+    const image = imageRef.current;
+    if (image) {
+      setDimensions({ width: image.width, height: image.height });
+    }
+
+    // Load the dog mask image
+    const img = new window.Image();
+    img.src = dogMask;
+    img.onload = () => {
+      setMaskImage(img);
+    };
+  }, []);
+
+  useEffect(() => {
+    bottomRef.current.scrollIntoView({ behavior: "smooth" });
+  });
+
+  const handleMove = (e) => {
+    const stage = e.target.getStage();
+    const pos = stage.getPointerPosition();
+    setCirclePos((oldPos) => [...oldPos, { ...pos, color: brushColor }]);
   };
 
   const toggleBrushColor = () => {
-    setBrushColor(brushColor === "black" ? "white" : "black");
+    setBrushColor((prevColor) => (prevColor === "black" ? "white" : "black"));
   };
 
-  const saveCanvas = () => {
-    const canvas = canvasRef.current;
-    setEditedMask(canvas.toDataURL("image/png"));
-    setIsEditable(false);
+  const generateMask = () => {
+    const stage = stageRef.current;
+    if (stage) {
+      const url = stage.toDataURL();
+      setDogMask(url);
+    }
   };
 
-  useEffect(() => {
-    if (!mask) return;
-
-    const img = imgRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-
-    const handleMouseMove = (event) => {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = img.width / rect.width;
-      const scaleY = img.height / rect.height;
-
-      mousePos.current = {
-        x: (event.clientX - rect.left) * scaleX,
-        y: (event.clientY - rect.top) * scaleY,
-      };
-      if (isMouseDown && isEditable) {
-        ctx.beginPath();
-        ctx.arc(
-          mousePos.current.x,
-          mousePos.current.y,
-          brushSize,
-          0,
-          2 * Math.PI,
-          false
-        );
-        ctx.fillStyle = brushColor;
-        ctx.fill();
-      }
-    };
-
-    const handleMouseDown = () => setIsMouseDown(true);
-    const handleMouseUp = () => setIsMouseDown(false);
-
-    const handleTouchMove = (event) => {
-      event.preventDefault();
-      const touch = event.touches[0];
-      handleMouseMove(touch);
-    };
-
-    const handleTouchStart = (event) => {
-      event.preventDefault();
-      handleMouseDown();
-    };
-
-    const handleTouchEnd = (event) => {
-      event.preventDefault();
-      handleMouseUp();
-    };
-
-    canvas.addEventListener("mousemove", handleMouseMove);
-    canvas.addEventListener("mousedown", handleMouseDown);
-    canvas.addEventListener("mouseup", handleMouseUp);
-    canvas.addEventListener("touchmove", handleTouchMove);
-    canvas.addEventListener("touchstart", handleTouchStart);
-    canvas.addEventListener("touchend", handleTouchEnd);
-
-    img.onload = () => {
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      ctx.drawImage(img, 0, 0, img.width, img.height);
-    };
-
-    return () => {
-      canvas.removeEventListener("mousemove", handleMouseMove);
-      canvas.removeEventListener("mousedown", handleMouseDown);
-      canvas.removeEventListener("mouseup", handleMouseUp);
-      canvas.removeEventListener("touchmove", handleTouchMove);
-      canvas.removeEventListener("touchstart", handleTouchStart);
-      canvas.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, [mask, isMouseDown, brushSize, brushColor, isEditable]);
-
-  if (mask) {
-    return (
-      <div
+  return (
+    <div className={styles.imageContainer}>
+      <button
+        className={styles.brushToggle}
+        onClick={toggleBrushColor}
         style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          overflow: "hidden",
+          backgroundColor: brushColor,
+          color: brushColor === "black" ? "white" : "black",
         }}
       >
-        <img
-          src={originalImage}
-          alt="Original"
-          style={{ width: "100%", height: "100%", objectFit: "contain" }}
-        />
-        <img ref={imgRef} src={mask} alt="Mask" style={{ display: "none" }} />
-        <canvas
-          ref={canvasRef}
-          style={{
-            position: "absolute",
-            width: window.innerWidth < 768 ? "100%" : "auto",
-            height: window.innerWidth < 768 ? "auto" : "100%",
-            objectFit: "contain",
-            opacity: 0.5,
-          }}
-        />
-        <Controller
-          resetCanvas={resetCanvas}
-          saveCanvas={saveCanvas}
-          brushSize={brushSize}
-          setBrushSize={setBrushSize}
-          toggleBrushColor={toggleBrushColor}
-          brushColor={brushColor}
-        />
+        Brush Color
+      </button>
+      <button onClick={generateMask}>Generate</button>
+      <img
+        ref={imageRef}
+        src={originalImage}
+        alt="Original"
+        className={styles.img}
+        onLoad={() => {
+          setDogMask(dogMask);
+        }}
+      />
+      <div className={styles.overlay}>
+        <Stage
+          ref={stageRef}
+          width={dimensions.width}
+          height={dimensions.height}
+          onMouseMove={handleMove}
+          onTouchMove={handleMove}
+        >
+          <Layer>
+            {maskImage && (
+              <Image
+                image={maskImage}
+                width={dimensions.width}
+                height={dimensions.height}
+              />
+            )}
+            {circlePos.map((pos, i) => (
+              <Circle
+                key={i}
+                x={pos.x}
+                y={pos.y}
+                radius={radius}
+                fill={pos.color}
+              />
+            ))}
+          </Layer>
+        </Stage>
       </div>
-    );
-  }
-
-  return null;
+      <div ref={bottomRef} />
+    </div>
+  );
 }

@@ -1,0 +1,28 @@
+@import "../colors.scss";
+
+.imageContainer {
+    display: grid;
+    position: relative;
+  }
+  
+  .overlay {
+    grid-area: 1 / 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column; 
+    opacity: .7;
+  }
+  
+  .img {
+    grid-area: 1 / 1;
+  }
+
+  .canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  .brushToggle {
+    width: 100%;
+  }
